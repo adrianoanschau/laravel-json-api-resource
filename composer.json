@@ -1,8 +1,9 @@
 {
-  "name": "kharysharpe/laravel-json-api-resource",
+  "name": "anxis/laravel-json-api-resource",
   "description": "Laravel JSON API Resource",
   "keywords": [
     "kharysharpe",
+    "anxis",
     "laravel-json-api-resource"
   ],
   "homepage": "https://github.com/kharysharpe/laravel-json-api-resource",
@@ -12,6 +13,11 @@
     {
       "name": "Khary Sharpe",
       "email": "kharysharpe@gmail.com",
+      "role": "Developer"
+    },
+    {
+      "name": "Adriano Anschau",
+      "email": "adrianoanschau@gmail.com",
       "role": "Developer"
     }
   ],
@@ -25,12 +31,12 @@
   },
   "autoload": {
     "psr-4": {
-      "Kharysharpe\\LaravelJsonApiResource\\": "src"
+      "Anxis\\LaravelJsonApiResource\\": "src"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "Kharysharpe\\LaravelJsonApiResource\\Tests\\": "tests"
+      "Anxis\\LaravelJsonApiResource\\Tests\\": "tests"
     }
   },
   "scripts": {
@@ -43,10 +49,10 @@
   "extra": {
     "laravel": {
       "providers": [
-        "Kharysharpe\\LaravelJsonApiResource\\LaravelJsonApiResourceServiceProvider"
+        "Anxis\\LaravelJsonApiResource\\LaravelJsonApiResourceServiceProvider"
       ],
       "aliases": {
-        "LaravelJsonApiResource": "Kharysharpe\\LaravelJsonApiResource\\LaravelJsonApiResourceFacade"
+        "LaravelJsonApiResource": "Anxis\\LaravelJsonApiResource\\LaravelJsonApiResourceFacade"
       }
     }
   }
