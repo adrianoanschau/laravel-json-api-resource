@@ -1,6 +1,6 @@
 <?php
 
-namespace Kharysharpe\LaravelJsonApiResource\Http\Resource\JsonApi;
+namespace Anxis\LaravelJsonApiResource\Http\Resource\JsonApi;
 
 use Illuminate\Http\Resources\Json\Resource as LaravelResource;
 use Illuminate\Support\Carbon;
@@ -62,7 +62,7 @@ class Resource extends LaravelResource
             if ($value instanceof Carbon) {
                 $value = $value->format('c');
             }
-            
+
             $attributes[$key] = $value;
         }
 
@@ -104,7 +104,7 @@ class Resource extends LaravelResource
             if ($model == null) {
                 continue;
             }
-            
+
             $relationName = $model->getTable();
 
             $class = $this->related[$relationName];
@@ -119,11 +119,11 @@ class Resource extends LaravelResource
     {
         return (isset($this->related) && !empty($this->related));
     }
-    
+
     public function getRelationships()
     {
         // @TODO filter fields ...relationships are fields too
-        
+
         $relationships = [];
 
         $relatedResources  = $this->loadResourceRelationships();
@@ -154,7 +154,7 @@ class Resource extends LaravelResource
     public function getSelfLink()
     {
         $routeParameters = [];
-        
+
         $parameters = $this->getRouteParameters();
 
         foreach ($parameters as $resourceName) {

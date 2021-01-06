@@ -1,6 +1,6 @@
 <?php
 
-namespace Kharysharpe\LaravelJsonApiResource\Tests;
+namespace Anxis\LaravelJsonApiResource\Tests;
 
 use PHPUnit\Framework\TestCase;
 

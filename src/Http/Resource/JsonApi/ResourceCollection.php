@@ -1,6 +1,6 @@
 <?php
 
-namespace Kharysharpe\LaravelJsonApiResource\Http\Resource\JsonApi;
+namespace Anxis\LaravelJsonApiResource\Http\Resource\JsonApi;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Resources\Json\ResourceCollection as JsonResourceCollection;

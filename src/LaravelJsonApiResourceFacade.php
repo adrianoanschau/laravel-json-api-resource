@@ -1,6 +1,6 @@
 <?php
 
-namespace Kharysharpe\LaravelJsonApiResource;
+namespace Anxis\LaravelJsonApiResource;
 
 use Illuminate\Support\Facades\Facade;
 
