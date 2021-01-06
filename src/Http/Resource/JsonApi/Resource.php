@@ -4,22 +4,24 @@ namespace Anxis\LaravelJsonApiResource\Http\Resource\JsonApi;
 
 use Illuminate\Http\Resources\Json\JsonResource as LaravelResource;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 class Resource extends LaravelResource
 {
     protected $resourceName;
+    protected $attributes = [];
+    protected $mappable = [];
     protected $related = [];
 
     protected $includes = [];
 
-    private $filterByFields = [];
     private $resources = [];
 
     public function toArray($request)
     {
         $data = [
-            'type' => $this->resolveResourceName(),
             'id' => (string)$this->getKey(),
+            'type' => $this->resolveResourceName(),
             'attributes' => $this->getResourceAttributes(),
             'relationships' => $this->when($this->hasRelationships(), $this->getRelationships()),
         ];
@@ -32,7 +34,7 @@ class Resource extends LaravelResource
         $with = [];
 
         if ($this->hasIncludes()) {
-            $with['included'] =  $this->getIncudedResources();
+            $with['included'] =  $this->getIncludedResources();
         }
 
         if (isset($this->route)) {
@@ -49,24 +51,43 @@ class Resource extends LaravelResource
         return ($this->resourceName) ? $this->resourceName : $this->resourceName = $this->getTable();
     }
 
-    public function getResourceAttributes($fields=[])
+    public function getResourceAttributes()
     {
-        // @TODO filter fields
         $attributes = [];
 
-        foreach ($this->getAttributes() as $key => $value) {
-            if ($fields && !in_array($key, $fields)) {
+        foreach (array_keys($this->getAttributes()) as $key) {
+
+            if ($key === "id") {
                 continue;
+            }
+
+            $value = $this->resource->{$key};
+
+            if (!in_array($key, $this->attributes)) {
+                continue;
+            }
+
+            $method = "get" . Str::studly($key). "Attribute";
+            if (method_exists($this, $method)) {
+                $value = $this->{$method}($value);
             }
 
             if ($value instanceof Carbon) {
                 $value = $value->format('c');
             }
 
-            $attributes[$key] = $value;
+            $attributes[$this->getMappedKeyName($key)] = $value;
         }
 
         return $attributes;
+    }
+
+    private function getMappedKeyName($key)
+    {
+        if (isset($this->mappable[$key])) {
+            return $this->mappable[$key];
+        }
+        return $key;
     }
 
     public function include(array $relations)
@@ -81,7 +102,7 @@ class Resource extends LaravelResource
         return (isset($this->includes) && !empty($this->includes));
     }
 
-    public function getIncudedResources()
+    public function getIncludedResources()
     {
         $result = [];
 
@@ -142,13 +163,6 @@ class Resource extends LaravelResource
         }
 
         return $relationships;
-    }
-
-    public function fields(array $filter)
-    {
-        $this->filterByFields = $filter;
-
-        return $this;
     }
 
     public function getSelfLink()
