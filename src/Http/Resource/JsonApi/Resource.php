@@ -20,7 +20,7 @@ class Resource extends LaravelResource
     public function toArray($request)
     {
         $data = [
-            'id' => (string)$this->getKey(),
+            'id' => $this->getResourceKey(),
             'type' => $this->resolveResourceName(),
             'attributes' => $this->getResourceAttributes(),
             'relationships' => $this->when($this->hasRelationships(), $this->getRelationships()),
@@ -44,6 +44,15 @@ class Resource extends LaravelResource
         }
 
         return $with;
+    }
+
+    private function getResourceKey()
+    {
+        $key = $this->getKey();
+        if (is_array($key)) {
+            $key = join('-', $key);
+        }
+        return (string)$key;
     }
 
     public function resolveResourceName()
