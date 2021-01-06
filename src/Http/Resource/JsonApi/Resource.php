@@ -2,7 +2,7 @@
 
 namespace Anxis\LaravelJsonApiResource\Http\Resource\JsonApi;
 
-use Illuminate\Http\Resources\Json\Resource as LaravelResource;
+use Illuminate\Http\Resources\Json\JsonResource as LaravelResource;
 use Illuminate\Support\Carbon;
 
 class Resource extends LaravelResource
