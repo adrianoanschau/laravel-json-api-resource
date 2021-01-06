@@ -135,7 +135,7 @@ class Resource extends LaravelResource
                 continue;
             }
 
-            $relationName = $model->getTable();
+            $relationName = $this->resolveResourceName();
 
             $class = $this->related[$relationName];
 
