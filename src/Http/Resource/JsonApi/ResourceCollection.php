@@ -12,6 +12,7 @@ class ResourceCollection extends JsonResourceCollection
     protected $related = [];
     protected $includes = [];
     protected $paginate = false;
+    protected $route = null;
 
     public function toArray($request)
     {

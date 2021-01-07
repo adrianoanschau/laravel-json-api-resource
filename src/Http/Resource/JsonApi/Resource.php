@@ -12,10 +12,9 @@ class Resource extends LaravelResource
     protected $attributes = [];
     protected $mappable = [];
     protected $related = [];
-
     protected $includes = [];
-
     private $resources = [];
+    protected $route = null;
 
     public function toArray($request)
     {
