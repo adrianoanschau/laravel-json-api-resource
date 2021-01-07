@@ -2,6 +2,7 @@
 
 namespace Anxis\LaravelJsonApiResource\Http\Resource\JsonApi;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Resources\Json\ResourceCollection as JsonResourceCollection;
 use Illuminate\Pagination\AbstractPaginator;
@@ -19,14 +20,23 @@ class ResourceCollection extends JsonResourceCollection
         if ($this->resource instanceof AbstractPaginator) {
             $this->paginate = true;
         }
-
-        $class = $this->resolveResourceItemClass();
-
         $data = [
-            'data' => $class::collection($this->collection),
+            'data' => $this->getCollection(),
         ];
 
         return $data;
+    }
+
+    public function getCollection()
+    {
+        $class = $this->resolveResourceItemClass();
+        $this->collection = $this->collection->map(function ($item) use ($class) {
+            if (get_parent_class($item) === Model::class) {
+                return new $class($item);
+            }
+            return $item;
+        });
+        return $class::collection($this->collection);
     }
 
     public function with($request)
