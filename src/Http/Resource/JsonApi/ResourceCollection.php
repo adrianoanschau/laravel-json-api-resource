@@ -10,6 +10,7 @@ class ResourceCollection extends JsonResourceCollection
 {
     protected $resourceItemClass = null;
     protected $related = [];
+    protected $includes = [];
     protected $paginate = false;
 
     public function toArray($request)
@@ -32,7 +33,7 @@ class ResourceCollection extends JsonResourceCollection
         $with = [];
 
         if ($this->hasIncludes()) {
-            $with['included'] = $this->getIncudedResources();
+            $with['included'] = $this->getIncludedResources();
         }
 
         if (isset($this->route)) {
@@ -80,14 +81,26 @@ class ResourceCollection extends JsonResourceCollection
         return (isset($this->includes) && !empty($this->includes));
     }
 
-    public function getIncudedResources()
+    public function getIncludedResources()
     {
         $result = [];
 
         $this->loadResourceRelationships();
 
-        foreach ($this->resources as $resource) {
-            $result[] = $resource;
+        foreach ($this->includes as $include) {
+            if (!isset($this->resources[$include])) {
+                continue;
+            }
+            $resources = $this->resources[$include];
+            foreach ($resources as $resource) {
+                if (get_parent_class($resource) === ResourceCollection::class) {
+                    foreach($resource->resource as $item) {
+                        $result[] = $item;
+                    }
+                } else {
+                    $result[] = $resource;
+                }
+            }
         }
 
         return $result;
@@ -96,25 +109,19 @@ class ResourceCollection extends JsonResourceCollection
     public function loadResourceRelationships()
     {
         $resources = [];
-        $models = [];
-        $items = [];
 
         foreach ($this->collection as $item) {
-            $item->load(array_keys($this->related));
-            $items[] = $item->getRelations();
-        }
 
-        foreach ($items as $models) {
-            foreach ($models as $model) {
-                if ($model == null) {
+            $relations = $item->loadResourceRelationships();
+
+            foreach ($relations as $relationName => $relation) {
+                if (is_null($relation)) {
                     continue;
                 }
-
-                $relationName = $model->getTable();
-
-                $class = $this->related[$relationName];
-
-                $resources[$model->id] = new $class($model);
+                if (!isset($resources[$relationName])) {
+                    $resources[$relationName] = [];
+                }
+                $resources[$relationName][] = $relation;
             }
         }
 
@@ -130,7 +137,7 @@ class ResourceCollection extends JsonResourceCollection
         foreach ($parameters as $resourceName) {
             // Register self
             if ($resourceName == $this->resolveResourceName()) {
-                $routeParameters[$resourceName] = $this->id;
+                $routeParameters[$resourceName] = $this->resolveResourceName();
                 continue;
             }
 

@@ -20,7 +20,7 @@ class Resource extends LaravelResource
     public function toArray($request)
     {
         $data = [
-            'id' => $this->getResourceKey(),
+            'id' => $this->resolveResourceKey(),
             'type' => $this->resolveResourceName(),
             'attributes' => $this->getResourceAttributes(),
             'relationships' => $this->when($this->hasRelationships(), $this->getRelationships()),
@@ -46,9 +46,9 @@ class Resource extends LaravelResource
         return $with;
     }
 
-    private function getResourceKey()
+    private function resolveResourceKey()
     {
-        $key = $this->getKey();
+        $key = $this->resource->getKey();
         if (is_array($key)) {
             $key = join('-', $key);
         }
@@ -57,24 +57,15 @@ class Resource extends LaravelResource
 
     public function resolveResourceName()
     {
-        return ($this->resourceName) ? $this->resourceName : $this->resourceName = $this->getTable();
+        return ($this->resourceName) ? $this->resourceName : $this->resourceName = $this->resource->getTable();
     }
 
     public function getResourceAttributes()
     {
         $attributes = [];
 
-        foreach (array_keys($this->getAttributes()) as $key) {
-
-            if ($key === "id") {
-                continue;
-            }
-
+        foreach ($this->attributes as $key) {
             $value = $this->resource->{$key};
-
-            if (!in_array($key, $this->attributes)) {
-                continue;
-            }
 
             $method = "get" . Str::studly($key). "Attribute";
             if (method_exists($this, $method)) {
@@ -115,8 +106,18 @@ class Resource extends LaravelResource
     {
         $result = [];
 
-        foreach ($this->resources as $resource) {
-            $result[$resource->resolveResourceName()][] = $resource;
+        foreach ($this->includes as $include) {
+            if (!isset($this->resources[$include])) {
+                continue;
+            }
+            $resource = $this->resources[$include];
+            if (get_parent_class($resource) === ResourceCollection::class) {
+                foreach($resource->resource as $item) {
+                    $result[] = $item;
+                }
+            } else {
+                $result[] = $resource;
+            }
         }
 
         return $result;
@@ -126,19 +127,12 @@ class Resource extends LaravelResource
     {
         $resources = [];
 
-        $this->load(array_keys($this->related));
-
-        $models = $this->getRelations();
-
-        foreach ($models as $model) {
-            if ($model == null) {
+        foreach (array_keys($this->related) as $relationName) {
+            $class = $this->related[$relationName];
+            $model = $this->{$relationName};
+            if (is_null($model)) {
                 continue;
             }
-
-            $relationName = $this->resolveResourceName();
-
-            $class = $this->related[$relationName];
-
             $resources[$relationName] = new $class($model);
         }
 
@@ -152,23 +146,41 @@ class Resource extends LaravelResource
 
     public function getRelationships()
     {
-        // @TODO filter fields ...relationships are fields too
-
         $relationships = [];
 
-        $relatedResources  = $this->loadResourceRelationships();
+        $relatedResources = $this->loadResourceRelationships();
 
-        // @TODO add self relationships to links
-        foreach ($relatedResources as $relation) {
-            $relationships[] = [
-                'links' => [
-                    'related' => $this->getSelfLink(),
-                ],
-                'data' => [
-                    'type' => $relation->resolveResourceName(),
-                    'id' => $relation->id,
-                ]
+        foreach ($relatedResources as $relationName => $relation) {
+            if (is_null($relation->resource)) {
+                continue;
+            }
+
+            $relationship = [
+                'data' => []
             ];
+
+            if (get_parent_class($relation) === ResourceCollection::class) {
+                $class = $relation->resolveResourceItemClass();
+                $collection = $class::collection($relation->resource);
+                foreach ($collection as $resource) {
+                    array_push($relationship['data'], [
+                        'id' => $resource->resolveResourceKey(),
+                        'type' => $resource->resolveResourceName(),
+                    ]);
+                }
+            } else {
+                $relationship['data'] = [
+                    'id' => $relation->resolveResourceKey(),
+                    'type' => $relation->resolveResourceName(),
+                ];
+            }
+
+            if (isset($this->route)) {
+                $relationship['links'] = [
+                    'related' => $this->getSelfLink(),
+                ];
+            }
+            $relationships[$relationName] = $relationship;
         }
 
         return $relationships;
@@ -183,7 +195,7 @@ class Resource extends LaravelResource
         foreach ($parameters as $resourceName) {
             // Register self
             if ($resourceName == $this->resolveResourceName()) {
-                $routeParameters[$resourceName] = $this->id;
+                $routeParameters[$resourceName] = $this->resolveResourceKey();
                 continue;
             }
 
