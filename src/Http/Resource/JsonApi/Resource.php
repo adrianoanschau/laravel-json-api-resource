@@ -4,6 +4,7 @@ namespace Anxis\LaravelJsonApiResource\Http\Resource\JsonApi;
 
 use Illuminate\Http\Resources\Json\JsonResource as LaravelResource;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class Resource extends LaravelResource
@@ -129,13 +130,69 @@ class Resource extends LaravelResource
         foreach (array_keys($this->related) as $relationName) {
             $class = $this->related[$relationName];
             $model = $this->{$relationName};
+            if (Str::contains($relationName, '.')) {
+                $load = $this;
+                foreach(explode('.', $relationName) as $name) {
+                    if (get_parent_class($load) === Collection::class) {
+
+                    } else {
+                        $load = $load->{$name};
+                    }
+                }
+                $model = $load;
+            }
             if (is_null($model)) {
                 continue;
             }
             $resources[$relationName] = new $class($model);
         }
 
-        return $this->resources = $resources;
+        $includes = $this->loadResourceIncludes();
+
+        return $this->resources = array_merge($resources, $includes);
+    }
+
+    public function loadResourceIncludes()
+    {
+        $resources = [];
+
+        foreach ($this->includes as $relationName) {
+            if (Str::contains($relationName, '.')) {
+                $includes = explode('.', $relationName);
+                $first = array_shift($includes);
+                $class = $this->related[$first];
+                $model = $this->{$first};
+                $resource = null;
+                foreach($includes as $include) {
+                    if (get_parent_class($model) === Collection::class) {
+                        $class = (new $class($model))->resolveResourceItemClass();
+                        $class = (new $class($model))->related[$include];
+                        $model->each(function ($item) use ($include, $class, &$resource) {
+                            if (is_null($resource)) {
+                                $resource = new $class($item->{$include});
+                            } else {
+                                $new = new $class($item->{$include});
+                                if (!isset($resource->collection)) {
+                                    $class = "{$class}Collection";
+                                    $new = new $class([$new]);
+                                    $resource = new $class([$resource]);
+                                }
+                                $resource = new $class($resource->collection->merge($new->collection));
+                            }
+                        });
+                    } else {
+                        $class = (new $class($model))->related[$include];
+                        $model = $model->{$include};
+                        $resource = new $class($model);
+                    }
+                }
+                if (!is_null($resource)) {
+                    $resources[$relationName] = $resource;
+                }
+            }
+        }
+
+        return $resources;
     }
 
     public function hasRelationships()
