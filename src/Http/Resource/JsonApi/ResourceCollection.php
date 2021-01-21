@@ -217,7 +217,7 @@ class ResourceCollection extends JsonResourceCollection
                 if (isset($url['path'])) {
                     $result .= $url['path'];
                 }
-                if (isset($url['path'])) {
+                if (isset($url['query'])) {
                     $result .= "?{$url['query']}";
                 }
                 return $result;
