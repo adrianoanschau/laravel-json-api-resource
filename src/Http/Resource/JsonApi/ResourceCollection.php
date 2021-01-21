@@ -213,7 +213,14 @@ class ResourceCollection extends JsonResourceCollection
         if (!is_null($route)) {
             $url = parse_url($route);
             if (!is_null($url) && is_array($url)) {
-                return $url['path'] . "?" . $url['query'];
+                $result = '';
+                if (isset($url['path'])) {
+                    $result .= $url['path'];
+                }
+                if (isset($url['path'])) {
+                    $result .= "?{$url['query']}";
+                }
+                return $result;
             }
         }
     }
