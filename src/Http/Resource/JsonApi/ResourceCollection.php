@@ -157,7 +157,7 @@ class ResourceCollection extends JsonResourceCollection
             }
         }
 
-        return $this->getRoutePath(route($this->route, $routeParameters));
+        return $this->getRouteWithoutDomain(route($this->route, $routeParameters));
     }
 
     public function getRouteParameters()
@@ -179,11 +179,11 @@ class ResourceCollection extends JsonResourceCollection
     {
         return [
             'links' => [
-                'self' => $this->getRoutePath($this->resource->url($this->resource->currentPage())),
-                'first' => $this->getRoutePath($this->resource->url(1)),
-                'prev' => $this->getRoutePath($this->resource->previousPageUrl()),
-                'next' => $this->getRoutePath($this->resource->nextPageUrl()),
-                'last' => $this->getRoutePath($this->url($this->lastPage())),
+                'self' => $this->getRouteWithoutDomain($this->resource->url($this->resource->currentPage())),
+                'first' => $this->getRouteWithoutDomain($this->resource->url(1)),
+                'prev' => $this->getRouteWithoutDomain($this->resource->previousPageUrl()),
+                'next' => $this->getRouteWithoutDomain($this->resource->nextPageUrl()),
+                'last' => $this->getRouteWithoutDomain($this->url($this->lastPage())),
             ],
             'meta' => [
                 'current_page' => $this->resource->currentPage(),
@@ -208,12 +208,12 @@ class ResourceCollection extends JsonResourceCollection
         return JsonResource::toResponse($request);
     }
 
-    private function getRoutePath(string $route = null)
+    private function getRouteWithoutDomain(string $route = null)
     {
         if (!is_null($route)) {
             $url = parse_url($route);
-            if (!is_null($url) && is_array($url) && isset($url['path'])) {
-                return $url['path'];
+            if (!is_null($url) && is_array($url)) {
+                return $url['path'] . "?" . $url['query'];
             }
         }
     }

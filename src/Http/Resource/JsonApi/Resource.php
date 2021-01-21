@@ -203,7 +203,7 @@ class Resource extends LaravelResource
             }
         }
 
-        return $this->getRoutePath(route($this->route, $routeParameters));
+        return $this->getRouteWithoutDomain(route($this->route, $routeParameters));
     }
 
     public function getRouteParameters()
@@ -221,12 +221,12 @@ class Resource extends LaravelResource
         return $parameters;
     }
 
-    private function getRoutePath(string $route = null)
+    private function getRouteWithoutDomain(string $route = null)
     {
         if (!is_null($route)) {
             $url = parse_url($route);
-            if (!is_null($url) && is_array($url) && isset($url['path'])) {
-                return $url['path'];
+            if (!is_null($url) && is_array($url)) {
+                return $url['path'] . "?" . $url['query'];
             }
         }
     }
