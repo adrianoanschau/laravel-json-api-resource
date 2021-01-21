@@ -208,11 +208,13 @@ class ResourceCollection extends JsonResourceCollection
         return JsonResource::toResponse($request);
     }
 
-    private function getRoutePath(string $route)
+    private function getRoutePath(string $route = null)
     {
-        $url = parse_url($route);
-        if (!is_null($url) && is_array($url) && isset($url['path'])) {
-            return $url['path'];
+        if (!is_null($route)) {
+            $url = parse_url($route);
+            if (!is_null($url) && is_array($url) && isset($url['path'])) {
+                return $url['path'];
+            }
         }
     }
 }
