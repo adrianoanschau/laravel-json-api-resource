@@ -203,7 +203,7 @@ class Resource extends LaravelResource
             }
         }
 
-        return route($this->route, $routeParameters);
+        return $this->getRoutePath(route($this->route, $routeParameters));
     }
 
     public function getRouteParameters()
@@ -219,5 +219,13 @@ class Resource extends LaravelResource
         }
 
         return $parameters;
+    }
+
+    private function getRoutePath(string $route)
+    {
+        $url = parse_url($route);
+        if (!is_null($url) && is_array($url) && isset($url['path'])) {
+            return $url['path'];
+        }
     }
 }

@@ -157,7 +157,7 @@ class ResourceCollection extends JsonResourceCollection
             }
         }
 
-        return route($this->route, $routeParameters);
+        return $this->getRoutePath(route($this->route, $routeParameters));
     }
 
     public function getRouteParameters()
@@ -179,11 +179,11 @@ class ResourceCollection extends JsonResourceCollection
     {
         return [
             'links' => [
-                'self' => $this->resource->url($this->resource->currentPage()),
-                'first' => $this->resource->url(1),
-                'prev' => $this->resource->previousPageUrl(),
-                'next' => $this->resource->nextPageUrl(),
-                'last' => $this->url($this->lastPage()),
+                'self' => $this->getRoutePath($this->resource->url($this->resource->currentPage())),
+                'first' => $this->getRoutePath($this->resource->url(1)),
+                'prev' => $this->getRoutePath($this->resource->previousPageUrl()),
+                'next' => $this->getRoutePath($this->resource->nextPageUrl()),
+                'last' => $this->getRoutePath($this->url($this->lastPage())),
             ],
             'meta' => [
                 'current_page' => $this->resource->currentPage(),
@@ -206,5 +206,13 @@ class ResourceCollection extends JsonResourceCollection
     public function toResponse($request)
     {
         return JsonResource::toResponse($request);
+    }
+
+    private function getRoutePath(string $route)
+    {
+        $url = parse_url($route);
+        if (!is_null($url) && is_array($url) && isset($url['path'])) {
+            return $url['path'];
+        }
     }
 }
