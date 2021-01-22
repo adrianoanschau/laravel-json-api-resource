@@ -198,7 +198,9 @@ class Resource extends LaravelResource
 
         foreach ($relatedResources as $relationName => $relation) {
             if (is_null($relation) || is_null($relation->resource)) {
-                $relationships[$relationName] = null;
+                $relationships[$relationName] = [
+                    'data' => null,
+                ];
                 continue;
             }
 
