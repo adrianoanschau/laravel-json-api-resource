@@ -130,18 +130,8 @@ class Resource extends LaravelResource
         foreach (array_keys($this->related) as $relationName) {
             $class = $this->related[$relationName];
             $model = $this->{$relationName};
-            if (Str::contains($relationName, '.')) {
-                $load = $this;
-                foreach(explode('.', $relationName) as $name) {
-                    if (get_parent_class($load) === Collection::class) {
-
-                    } else {
-                        $load = $load->{$name};
-                    }
-                }
-                $model = $load;
-            }
             if (is_null($model)) {
+                $resources[$relationName] = null;
                 continue;
             }
             $resources[$relationName] = new $class($model);
@@ -207,7 +197,8 @@ class Resource extends LaravelResource
         $relatedResources = $this->loadResourceRelationships();
 
         foreach ($relatedResources as $relationName => $relation) {
-            if (is_null($relation->resource)) {
+            if (is_null($relation) || is_null($relation->resource)) {
+                $relationships[$relationName] = null;
                 continue;
             }
 
